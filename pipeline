@@ -1,50 +1,54 @@
-pipeline{
-  agent anY
-  
-  ENVIRONMENT {
-     DOCKERHUB_CREDENTIALS = credentials('dockerhubID')
-	 IMAGE_NAME = "675711/my-webapp"
-  }
-  
-  stages{
-	stage('checkout'){
-	  steps{
-		git{
-		url:"https://",branch:'main',credentialsid:'dockerhubid'
-		}
-		}
-	  }
-	stage('Build Docker image'){
-	  steps{
-	  script{
-			dokerimage = docker:build("${IMAGE_NAME}:latest")
-	}
-	}
-	}
-	
-	stage("Push to dockerhub"){
-	  steps{
-	    script{
-	      docker_withRegistry("https://index.docker.io/v1/'dockerhubID'")
-	      {
-	        dockerImage.push()
-	      }
-	    }
-	  }
-	}
-	
-	post{
-	  always{
-	    echo "cleaning up workspace"
-	    deletedir()
-	  }
-	  success{
-	    echo ""pipeline succeded!"
-	  }
-	  failure {
-	    echo ''pipeline failed"
-	  }
-	}
-  }
-  
+pipeline {
+    agent any
+
+    environment {
+        // Change 'dockerhub' to the exact ID you gave your credentials in Jenkins
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        IMAGE_NAME = "675711/python-app"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // branch: 'main' is usually the default for modern GitHub repos
+                git url: 'https://github.com/mthd-mca/web.git', 
+                    branch: 'main', 
+                    credentialsId: 'dockerhub' // Replace with your GitHub Credential ID
+            }
+        }
+
+        stage('Build Docker image') {
+            steps {
+                script {
+                    // Correct syntax: docker.build
+                    dockerImage = docker.build("${IMAGE_NAME}:latest")
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    // Correct syntax: docker.withRegistry
+                    // Use an empty string '' for the default Docker Hub registry
+                    docker.withRegistry('', 'dockerhub') {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up workspace..."
+            deleteDir() // Correct syntax: camelCase
+        }
+        success {
+            echo "Pipeline succeeded!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
 }
